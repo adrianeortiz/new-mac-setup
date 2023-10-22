@@ -1,3 +1,4 @@
+# for intel based Mac's
 # making script idempotent
 
 #!/bin/bash

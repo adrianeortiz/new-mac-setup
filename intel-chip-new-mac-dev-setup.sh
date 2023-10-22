@@ -1,5 +1,5 @@
-# for intel based Mac's
-# making script idempotent
+# For Apple chip based Mac's
+# Script is idempotent
 
 #!/bin/bash
 

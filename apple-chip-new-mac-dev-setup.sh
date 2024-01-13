@@ -113,6 +113,22 @@ done
 # for editors and IDE's
 cp ~/configs/vscode-settings.json ~/Library/Application\ Support/Code/User/settings.json
 
+# Change default editor to read all file types
+# You can use any editor, simply change the app in the command
+
+# This is for using VS Code
+brew install duti
+
+duti -s com.microsoft.VSCode public.plain-text all
+duti -s com.microsoft.VSCode public.unix-executable all
+duti -s com.microsoft.VSCode public.data all
+
+:<<'END_COMMENT'
+For MacVim use: com.vim.macvim
+For Sublime Text use: com.sublimetext.4
+OR com.sublimetext.3 for a different version
+END_COMMENT
+
 # Database Initialization
 brew services start mysql
 mysql_secure_installation

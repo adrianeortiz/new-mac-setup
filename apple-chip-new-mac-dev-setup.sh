@@ -1,7 +1,7 @@
-# For Apple chip based Mac's
-# Script is idempotent
-
 #!/bin/bash
+
+# Setup Script for New Mac - Apple Chip
+# This script configures a new Apple Chip Mac with necessary software and settings.
 
 # Check for available software updates
 if softwareupdate -l | grep -q "No new software available."; then
@@ -9,14 +9,18 @@ if softwareupdate -l | grep -q "No new software available."; then
 else
     # Install available software updates
     softwareupdate -i -a
+    read -p "Install all available updates? (y/n): " choice
+if [[ "$choice" == [Yy]* ]]; then
+    sudo softwareupdate -ia
+
 fi
+
+# Allow downloads from anywhere
+sudo spctl --master-disable
 
 # Show hidden files in Finder
 defaults write com.apple.finder AppleShowAllFiles YES
 killall Finder
-
-# Allow downloads from anywhere
-sudo spctl --master-disable
 
 # Show battery percentage on menu bar
 defaults write com.apple.menuextra.battery ShowPercent YES
@@ -40,7 +44,9 @@ killall Dock
 defaults write com.apple.dock workspaces-auto-swoosh -bool false && \
 killall Dock
 
+# Commenting out iCloud section, use at your own discretion..
 # Set up iCloud
+: <<'END_COMMENT'
 echo "Setting up iCloud..."
 echo "Enter your Apple ID email address: "
 read apple_id_email
@@ -56,11 +62,22 @@ defaults write MobileMeAccounts NeedsMigrated -bool false
 # Configure iCloud services
 echo "Configuring iCloud services..."
 # (iCloud configuration commands here)
+END_COMMENT
 
-# Install Homebrew for Apple Silicon
+# Check if Homebrew is installed
+if ! command -v brew &>/dev/null; then
+# Install Homebrew for Apple Silicon then make sure it is up to date
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+else
+    echo "Homebrew is already installed."
+fi
+
+# Homebrew update
+brew update
+brew upgrade
 
 # Check and install packages
+# Install Versions and link them as needed
 brew_packages=("git" "node" "python3" "ruby" "adoptopenjdk" "visual-studio-code" "docker" "mysql" "postgresql" "redis" "mongodb" "elasticsearch" "rabbitmq" "heroku" "awscli" "google-cloud-sdk" "zsh" "htop" "tmux" "neovim")
 
 for package in "${brew_packages[@]}"; do
@@ -70,6 +87,7 @@ for package in "${brew_packages[@]}"; do
         echo "$package is already installed."
     fi
 done
+
 
 # Install fonts
 brew tap homebrew/cask-fonts
@@ -92,6 +110,13 @@ for plugin in "${plugins[@]}"; do
     fi
 done
 
+# for editors and IDE's
+cp ~/configs/vscode-settings.json ~/Library/Application\ Support/Code/User/settings.json
+
+# Database Initialization
+brew services start mysql
+mysql_secure_installation
+
 # Configure Git (only if it is installed)
 if command -v git &>/dev/null; then
     git config --global user.name "Your Name"
@@ -102,6 +127,10 @@ fi
 if command -v git &>/dev/null; then
     git clone https://github.com/yourusername/yourproject.git
 fi
+
+# Cleanup and Validation
+brew cleanup
+brew doctor
 
 # Done!
 echo "Development environment setup complete."

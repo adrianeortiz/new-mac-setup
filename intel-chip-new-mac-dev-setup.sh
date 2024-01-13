@@ -1,7 +1,7 @@
-# For Intel chip based Mac's
-# Script is idempotent
-
 #!/bin/bash
+
+# Setup Script for New Mac - Intel Chip
+# This script configures a new Intel-based Mac with necessary software and settings.
 
 # Check for available software updates
 if softwareupdate -l | grep -q "No new software available."; then
@@ -9,14 +9,18 @@ if softwareupdate -l | grep -q "No new software available."; then
 else
     # Install available software updates
     softwareupdate -i -a
+    read -p "Install all available updates? (y/n): " choice
+if [[ "$choice" == [Yy]* ]]; then
+    sudo softwareupdate -ia
+
 fi
+
+# Allow downloads from anywhere
+sudo spctl --master-disable
 
 # Show hidden files in Finder
 defaults write com.apple.finder AppleShowAllFiles YES
 killall Finder
-
-# Allow downloads from anywhere
-sudo spctl --master-disable
 
 # Show battery percentage on menu bar
 defaults write com.apple.menuextra.battery ShowPercent YES
@@ -40,7 +44,10 @@ killall Dock
 defaults write com.apple.dock workspaces-auto-swoosh -bool false && \
 killall Dock
 
+
+# Commenting out iCloud section, use at your own discretion..
 # Set up iCloud
+: <<'END_COMMENT'
 echo "Setting up iCloud..."
 echo "Enter your Apple ID email address: "
 read apple_id_email
@@ -88,6 +95,8 @@ else
     echo "iCloud services are already configured."
 fi
 
+END_COMMENT
+
 # Check if Homebrew is installed
 if ! command -v brew &>/dev/null; then
     # Install Homebrew
@@ -96,7 +105,17 @@ else
     echo "Homebrew is already installed."
 fi
 
+# Homebrew update
+brew update
+brew upgrade
+
 # Check and install other packages similarly
+# Install Versions and link them as needed
+:<< 'END_COMMENT'
+For Example, the following will set Python 3.8 as the default
+brew install python@3.8
+brew link python@3.8 --force
+END_COMMENT
 
 # Check and install Git
 if ! command -v git &>/dev/null; then
@@ -263,6 +282,13 @@ else
     echo "Neovim is already installed."
 fi
 
+# for editors and IDE's
+cp ~/configs/vscode-settings.json ~/Library/Application\ Support/Code/User/settings.json
+
+# Database Initialization
+brew services start mysql
+mysql_secure_installation
+
 # Configure Git (only if it is installed)
 if command -v git &>/dev/null; then
     git config --global user.name "Your Name"
@@ -273,6 +299,10 @@ fi
 if command -v git &>/dev/null; then
     git clone https://github.com/yourusername/yourproject.git
 fi
+
+# Cleanup and Validation
+brew cleanup
+brew doctor
 
 # Done!
 echo "Development environment setup complete."
